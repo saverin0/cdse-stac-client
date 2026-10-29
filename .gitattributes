@@ -1,0 +1,4 @@
+# Linux line ends everywhere, also when the repository is cloned on Windows: the shell script and
+# SQL files are mounted into Linux containers, where a Windows line end breaks them.
+* text=auto eol=lf
+*.sh text eol=lf

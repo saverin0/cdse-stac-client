@@ -1,0 +1,68 @@
+# Runs every test on each supported Python version, including the database tests against a
+# throwaway PostGIS as the client's own role, audits the dependencies, and builds both images.
+name: tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read  # the job only reads the repository
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    services:
+      db:
+        # Pinned by content digest, like docker-compose.yml.
+        image: postgis/postgis:17-3.5@sha256:01a6a70e41e6c4467c8f55f6063555ed72db2d6662cd0d571040d42eadaeb6f6
+        env:
+          POSTGRES_DB: iris_test
+          POSTGRES_USER: iris
+          POSTGRES_PASSWORD: ci-only-password  # a throwaway database that lives only for this job
+        ports:
+          - 127.0.0.1:5432:5432  # reachable from the job only, not from outside the runner
+        options: >-
+          --health-cmd "pg_isready -h 127.0.0.1 -U iris -d iris_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      CDSE_DB_HOST: 127.0.0.1
+      CDSE_DB_PORT: "5432"
+      CDSE_DB_USER: cdse_loader
+      CDSE_DB_PASSWORD: ci-only-client-password
+      CDSE_TEST_DB_NAME: iris_test
+      TEST_ADMIN_DATABASE_URL: postgresql+psycopg://iris:ci-only-password@127.0.0.1:5432/iris_test
+      REQUIRE_DB_TESTS: "1"  # fail instead of skipping when the database tests cannot run
+    steps:
+      # Actions are pinned to a full commit, so a moved tag cannot change what runs here.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: requirements-dev.lock
+      - name: Create the client's own database role
+        env:
+          PGPASSWORD: ci-only-password
+        run: psql -h 127.0.0.1 -U iris -d iris_test -v ON_ERROR_STOP=1 -v password="$CDSE_DB_PASSWORD" -f docker/client_role.sql
+      - run: pip install --require-hashes -r requirements-dev.lock
+      - run: pytest -q -rs -p no:cacheprovider  # -rs prints the reason for any skipped test
+      - name: Audit the dependencies for known vulnerabilities
+        if: matrix.python-version == '3.13'
+        run: |
+          python -m pip install pip-audit==2.10.1
+          pip-audit --require-hashes --disable-pip -r requirements-dev.lock
+      - name: Build the runtime and the test image
+        if: matrix.python-version == '3.13'
+        run: |
+          docker build --target runtime -t cdse-stac-client:ci .
+          docker build --target test -t cdse-stac-client:ci-test .

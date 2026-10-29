@@ -1,0 +1,24 @@
+Validation checks
+  [PASS] at least one fetch is loaded (1 fetches, 66 scenes)
+  [PASS] scene ids are unique (66 rows, 66 distinct scene ids)
+  [PASS] every scene was taken inside its date window (first 2026-04-01 10:36:19.024+00, last 2026-09-25 10:40:41.024+00)
+  [PASS] cloud cover is within 0 and the query limit (highest 29.79 percent)
+  [PASS] footprints are valid multipolygons in WGS84 (EPSG 4326) (66 footprints checked)
+  [PASS] every footprint touches the box of every parcel that fetched it (66 of 66 scene and fetch pairs touch)
+  [PASS] bbox columns match the footprint (66 rows checked)
+  [PASS] every scene keeps its raw record with its id and assets (66 scenes checked)
+  [PASS] counts add up for every run, so nothing was lost (1 runs checked)
+  [PASS] stored rows match the counts of every run (1 runs checked)
+  [PASS] every load ran to the end (1 runs checked)
+  [PASS] the newest fetch of each question is complete and undamaged (1 questions checked)
+  [PASS] all stored times carry a time zone (15 time columns)
+  [PASS] no project table exists outside iris_staging (0 cdse tables found elsewhere)
+
+Coverage per parcel and month
+  parcel_id         month    scenes  days_with_a_scene  tiles        satellites                           min_cloud_pct  mean_cloud_pct  partial_cover
+  nw_bornheim_core  2026-04  16      6                  31UGS 32ULB  sentinel-2a sentinel-2b sentinel-2c  0.2            13.7            0            
+  nw_bornheim_core  2026-05  10      4                  31UGS 32ULB  sentinel-2a sentinel-2b sentinel-2c  0.0            7.4             0            
+  nw_bornheim_core  2026-06  12      5                  31UGS 32ULB  sentinel-2a sentinel-2b sentinel-2c  0.2            6.6             0            
+  nw_bornheim_core  2026-07  10      5                  31UGS 32ULB  sentinel-2a sentinel-2c              0.2            9.5             0            
+  nw_bornheim_core  2026-08  10      5                  31UGS 32ULB  sentinel-2a sentinel-2b sentinel-2c  0.0            5.4             0            
+  nw_bornheim_core  2026-09  8       2                  31UGS 32ULB  sentinel-2a sentinel-2b              8.0            14.1            0            

@@ -1,0 +1,84 @@
+# A local, isolated staging database. Nothing here connects to iris_core or any production system.
+# Passwords travel as Docker secrets (files under /run/secrets), not as environment variables,
+# so docker inspect and docker compose config do not print them.
+services:
+  db:
+    # Pinned by content digest. To update: docker buildx imagetools inspect postgis/postgis:17-3.5
+    image: postgis/postgis:17-3.5@sha256:01a6a70e41e6c4467c8f55f6063555ed72db2d6662cd0d571040d42eadaeb6f6
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-iris}
+      POSTGRES_USER: ${POSTGRES_USER:-iris}  # the owner of the database; only this container uses it
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      CDSE_DB_PASSWORD_FILE: /run/secrets/cdse_db_password
+    secrets: [postgres_password, cdse_db_password]
+    ports:
+      # 5434, not 5433: the sample project's own database uses 5433, so the two never collide.
+      # Bound to 127.0.0.1, so only this machine can reach it.
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/initdb/20_test_database.sql:/docker-entrypoint-initdb.d/20_test_database.sql:ro
+      - ./docker/initdb/30_client_role.sh:/docker-entrypoint-initdb.d/30_client_role.sh:ro
+      - ./docker/client_role.sql:/opt/cdse/client_role.sql:ro
+    healthcheck:
+      # Ask over TCP: the temporary server used during first-time setup only listens on a
+      # local socket, so this turns healthy only once the real server is up.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      start_period: 60s
+      start_interval: 1s  # ask every second while starting, so the client does not wait longer than needed
+      timeout: 5s
+      retries: 20
+
+  client:
+    build:
+      context: .
+      target: runtime
+    image: cdse-stac-client:0.1.0
+    profiles: ["client"]  # only started on request: docker compose run --rm client <command>
+    depends_on:
+      db:
+        condition: service_healthy
+    environment: &client-environment
+      CDSE_DB_HOST: db
+      CDSE_DB_PORT: "5432"
+      CDSE_DB_NAME: ${POSTGRES_DB:-iris}
+      CDSE_DB_USER: cdse_loader  # the client's own role: rights on iris_staging only
+      CDSE_DB_PASSWORD_FILE: /run/secrets/cdse_db_password
+      CDSE_ACCESS_TOKEN_FILE: /run/secrets/cdse_access_token
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    secrets: [cdse_db_password, cdse_access_token]
+    volumes:
+      - runs:/app/data/runs  # fetch logs survive the container, so a run can be loaded or resumed later
+      - ./config:/app/config:ro  # settings are read from this folder, so an edit counts without a rebuild
+    cap_drop: [ALL]  # no Linux capabilities, and no way to gain new ones
+    security_opt: ["no-new-privileges:true"]
+
+  tests:
+    build:
+      context: .
+      target: test
+    image: cdse-stac-client:0.1.0-test
+    profiles: ["tests"]  # docker compose run --rm tests
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      <<: *client-environment
+      CDSE_TEST_DB_NAME: iris_test
+      REQUIRE_DB_TESTS: "1"
+    secrets: [cdse_db_password, cdse_access_token]
+    cap_drop: [ALL]  # no Linux capabilities, and no way to gain new ones
+    security_opt: ["no-new-privileges:true"]
+
+secrets:
+  postgres_password:
+    environment: POSTGRES_PASSWORD
+  cdse_db_password:
+    environment: CDSE_DB_PASSWORD
+  cdse_access_token:
+    environment: CDSE_ACCESS_TOKEN
+
+volumes:
+  pgdata:
+  runs:

@@ -1,0 +1,50 @@
+{
+  "captured_at": "2026-10-28T14:10:51.570174+00:00",
+  "request": {
+    "method": "POST",
+    "url": "https://catalogue.dataspace.copernicus.eu/stac/search",
+    "body": {
+      "collections": [
+        "sentinel-2-l2a"
+      ],
+      "bbox": [
+        6.966,
+        50.761,
+        6.994,
+        50.779
+      ],
+      "datetime": "2010-01-01T00:00:00Z/2010-01-31T23:59:59Z",
+      "limit": 3,
+      "sortby": [
+        {
+          "field": "properties.datetime",
+          "direction": "asc"
+        },
+        {
+          "field": "id",
+          "direction": "asc"
+        }
+      ]
+    }
+  },
+  "status": 200,
+  "content_type": "application/geo+json",
+  "sha256": "244436fe3aface1030f5c5e805132ca4c4863d5b8cfa4be14fbd9ce963b68437",
+  "response": {
+    "type": "FeatureCollection",
+    "links": [
+      {
+        "rel": "root",
+        "type": "application/json",
+        "href": "https://stac.dataspace.copernicus.eu/v1/"
+      },
+      {
+        "rel": "self",
+        "type": "application/json",
+        "href": "https://stac.dataspace.copernicus.eu/v1/search"
+      }
+    ],
+    "features": [],
+    "numberReturned": 0
+  }
+}

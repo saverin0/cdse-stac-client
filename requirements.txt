@@ -1,0 +1,16 @@
+# Exact versions, so every install gets the same code. Only what the program needs to run;
+# the test tools are in requirements-dev.txt.
+
+# Talking to the Copernicus catalogue
+requests==2.34.2
+
+# Database: tables in Python, map columns, table changes, the Postgres driver
+SQLAlchemy==2.0.55
+GeoAlchemy2==0.20.0
+alembic==1.20.1
+psycopg[binary]==3.3.6
+
+# Settings and checks
+python-dotenv==1.2.4
+pydantic==2.14.1
+shapely==2.2.0

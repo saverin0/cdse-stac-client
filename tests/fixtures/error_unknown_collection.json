@@ -1,0 +1,43 @@
+{
+  "captured_at": "2026-10-28T14:10:53.627810+00:00",
+  "request": {
+    "method": "POST",
+    "url": "https://catalogue.dataspace.copernicus.eu/stac/search",
+    "body": {
+      "collections": [
+        "SENTINEL-2"
+      ],
+      "bbox": [
+        6.966,
+        50.761,
+        6.994,
+        50.779
+      ],
+      "datetime": "2026-04-01T00:00:00Z/2026-09-30T23:59:59Z",
+      "limit": 3,
+      "sortby": [
+        {
+          "field": "properties.datetime",
+          "direction": "asc"
+        },
+        {
+          "field": "id",
+          "direction": "asc"
+        }
+      ]
+    }
+  },
+  "status": 400,
+  "content_type": "application/json",
+  "sha256": "eaaa796f47cf3c20a4446c88bed2a9d7cfe8b6c8e9057570273dc4476a85c48d",
+  "response": {
+    "detail": {
+      "code": "CollectionInQuerryDoesNotExist",
+      "message": "One or more requested collections do not exist.",
+      "collections": [
+        "SENTINEL-2"
+      ],
+      "hint": "Available collections are listed at /collections"
+    }
+  }
+}

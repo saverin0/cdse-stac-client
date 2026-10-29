@@ -1,0 +1,5 @@
+# The program's packages plus the test tools. Exact versions.
+-r requirements.txt
+
+pytest==9.1.1
+responses==0.26.3

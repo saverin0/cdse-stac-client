@@ -1,0 +1,31 @@
+# Example search: Sentinel-2 scenes over one parcel in Bornheim, NRW, for the 2026 growing season.
+runs_dir = "data/runs"
+
+[source]
+# The address named in the assignment. Its answers link on to stac.dataspace.copernicus.eu,
+# so both hosts are allowed. The client refuses to follow a link to any other host.
+search_url = "https://catalogue.dataspace.copernicus.eu/stac/search"
+allowed_hosts = ["catalogue.dataspace.copernicus.eu", "stac.dataspace.copernicus.eu"]
+page_size = 50              # scenes per page, at most 1000 (one page is one transaction); each scene is about 70 KB
+requests_per_second = 1.0   # the server answered 429 after about 10 fast calls
+connect_timeout_s = 5
+read_timeout_s = 30         # longest silence while an answer arrives
+total_timeout_s = 120       # longest time for one whole answer
+max_attempts = 5            # tries per page for failures worth retrying
+max_page_bytes = 50000000   # a real page of 50 scenes is about 3.5 MB
+max_pages = 200             # safety net against a server that never stops sending next links
+max_box_deg = 1.0           # a parcel, not a country
+
+[query]
+parcel_id = "nw_bornheim_core"
+collection = "sentinel-2-l2a"
+start = 2026-04-01T00:00:00Z
+end = 2026-09-30T23:59:59Z
+max_cloud_cover_pct = 30
+
+[query.bbox]
+# Degrees in WGS84. Each side is named, so the order cannot be mixed up.
+west = 6.966
+south = 50.761
+east = 6.994
+north = 50.779
